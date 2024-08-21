@@ -1,0 +1,421 @@
+---
+title: "Final"
+author: "Aritra"
+date: "2023-12-19"
+output:   
+  html_document:
+    toc: true
+    toc_float: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#Clearing the environment
+rm(list = ls())
+```
+
+# **Question 1. Distribution of an individual score vs Sample Mean**
+
+General Information: The distribution of the average IQ score is known to closely follow a Gaussian distribution with a mean centered directly at 100 and a population standard deviation of 16 (Stanford-Benet).
+
+## a. A single person is randomly selected for jury duty. What is the probability that this person will have an IQ of 110 or higher?
+
+```{r}
+# Parameters for the normal distribution
+mean_iq = 100
+sd_iq = 16
+
+# Calculate the probability (area to the right hand side)
+probability_individual = 1 - pnorm(110, mean_iq, sd_iq)
+
+# Print the result
+cat("The probability that an individual has an IQ of 110 or higher is:", probability_individual, "\n")
+```
+
+## b. What is the probability that the mean IQ of the 12-person jury would be 110 or above if drawn from a normal population with μ=100 and σ=16?
+
+```{r}
+# Parameters for the distribution of sample means
+n_jury = 12
+sd_jury_z = sd_iq / sqrt(n_jury)
+
+# Calculate the probability
+probability_mean_jury = 1 - pnorm(110, mean_iq, sd_jury_z)
+
+# Print the result
+cat("The probability that the mean IQ of a 12-person jury is 110 or higher is:", probability_mean_jury, "\n")
+```
+
+# **Question 2: Hypothesis testing**
+
+## (a) A newspaper article states that only a minority of the Americans who decide not to go to college do so because they cannot afford it and uses the point estimate from this survey as evidence.
+
+$$ H_0: p \leq 0.5 $$
+
+$$ H_a: p > 0.5 $$
+
+It will be a one-tailed test.
+
+```{r}
+# Given data
+n = 331
+p_hat = 0.48
+p_0 = 0.5
+alpha = 0.05 #significance level
+
+# Calculate the test statistic (Z distribution)
+z_stat = (p_hat - p_0) / sqrt(p_0 * (1 - p_0) / n)
+
+# Calculate the critical value
+critical_value = qnorm(1 - alpha)
+
+# Calculate the p-value
+p_value = 1 - pnorm(z_stat)
+
+# Print the results
+cat("Test Statistic:", z_stat, "\n")
+cat("Critical Value:", critical_value, "\n")
+cat("P-Value:", p_value, "\n")
+
+# Compare the test statistic with the critical value and make a decision
+if (z_stat > critical_value) {
+  cat("Reject the null hypothesis\n")
+} else {
+  cat("Fail to reject the null hypothesis\n")
+}
+```
+
+### **(b) Would you expect a confidence interval (**α=0.05, double sided) for the proportion of American adults who decide not to go to college for financial reasons to include 0.5 (hypothesized value)? Show, or explain.
+
+```{r}
+# Calculate the confidence interval
+margin_of_error = qnorm(1 - alpha/2) * sqrt(p_hat * (1 - p_hat) / n)
+confidence_interval = c(p_hat - margin_of_error, p_hat + margin_of_error)
+
+# Print the confidence interval
+cat("Confidence Interval:", confidence_interval, "\n")
+```
+
+As the confidence interval includes the hypothesized value, we can further confirm the result of 'fail to reject the null hypothesis'.
+
+# **Question 3: Hypothesis testing**
+
+## **Gaming and distracted eating**
+
+$$H_0: \mu_1 = \mu_2$$
+
+$$H_a: \mu_1 \neq \mu_2$$
+
+It will be a two-tailed test.
+
+```{r}
+# Given data
+n1 = 22
+x1_bar = 4.9
+s1 = 1.8
+
+n2 = 22
+x2_bar = 6.1
+s2 = 1.8
+
+alpha = 0.05
+
+# Calculate the test statistic (t-distribution)
+t_stat = (x1_bar - x2_bar) / sqrt((s1^2 / n1) + (s2^2 / n2))
+```
+
+```{r}
+# Degrees of freedom using the Satterthwaite formula
+df = ((s1^2 / n1 + s2^2 / n2)^2) / ((s1^2 / n1)^2 / (n1 - 1) + (s2^2 / n2)^2 / (n2 - 1))
+
+# Critical values for a two-tailed test
+critical_value = qt(c(alpha/2, 1 - alpha/2), df)
+
+# Print the results
+cat("Test Statistic:", t_stat, "\n")
+cat("Degrees of Freedom (Satterthwaite):", df, "\n")
+cat("Critical Values:", critical_value, "\n")
+```
+
+```{r}
+# Compare the test statistic with the critical values and make a decision
+if (t_stat < critical_value[1] | t_stat > critical_value[2]) {
+  cat("Reject the null hypothesis\n")
+} else {
+  cat("Fail to reject the null hypothesis\n")
+}
+```
+
+Hence, the data provide strong evidence that the average number of food items recalled by the patients in the treatment and control groups are different.
+
+# **Question 4: Confidence Intervals**
+
+## A 90% confidence interval for a population mean is (65,77). The population distribution is approximately normal and the population standard deviation is unknown. This confidence interval is based on a simple random sample of 25 observations (double sided). Calculate the sample mean, the margin of error, and the sample standard deviation.
+
+```{r}
+# Given data
+lower_limit = 65
+upper_limit = 77
+confidence_level = 0.90
+sample_size = 25
+
+# Calculate the sample mean
+sample_mean = (lower_limit + upper_limit) / 2
+
+# Calculate the margin of error
+margin_of_error = (upper_limit - lower_limit) / 2
+
+# Calculate the critical value for a two-tailed interval
+critical_value = qt((1 + confidence_level) / 2, df = sample_size - 1)
+
+# Calculate the sample standard deviation
+sample_standard_deviation = margin_of_error / critical_value
+
+# Print the results
+cat("Sample Mean (\bar{x}):", sample_mean, "\n")
+cat("Margin of Error (E):", margin_of_error, "\n")
+cat("Sample Standard Deviation (s):", sample_standard_deviation, "\n")
+```
+
+# **Question 5: Assumptions**
+
+## **Heart transplant success**
+
+First, we need to calculate the survival rates for both groups.
+
+For the control group, the survival rate is 4 / (4 + 30) = 4 / 34 ≈ 0.118.
+
+For the treatment group, the survival rate is 24 / (24 + 45) = 24 / 69 ≈ 0.348.
+
+Normal approximations work best when proportions are closer to 0.5. This is not satisfied in this case. Moreover, the sample sizes are extremely small for normal approximation. Normal approximation also assumes normal distribution which may no the the case with survival rates which in turn could lead to inaccurate conclusions.
+
+# **Question 6: Data Question**
+
+```{r}
+# Load necessary libraries
+library(tidyverse)
+```
+
+## **1. Use `set.seed(100)` command, and create a subset of `train` dataset that has only 500 observations.**
+
+```{r}
+train <- read.csv("/Users/aritraray/Desktop/train.csv")
+```
+
+```{r}
+#replace blank spaces with NA values
+train[train == "" | train == " "]<-NA
+
+#count the number of NA values per variable in a dataframe
+colSums(is.na(train))
+```
+
+```{r}
+#Imputing missing values
+train$Age[is.na(train$Age)] <- median(train$Age, na.rm=TRUE)
+train$Cabin[is.na(train$Cabin)] <- 'Unknown'
+train$Embarked[is.na(train$Embarked)] <- 'Unknown'
+```
+
+```{r}
+#Checking for any more missing values
+sum(is.na(train))
+```
+
+```{r}
+# Set seed 
+set.seed(100)
+
+# Create a subset of 500 observations
+train_sub <- sample_n(train, 500)
+```
+
+```{r}
+# Check the structure of the sampled dataset
+str(train_sub)
+```
+
+## **2. Create an Ordinary Least Squares model / linear regression where `Survived` is the dependent variable on your n=500 sample. If you wish, you can run a logistic regression instead (would be more appropriate).**
+
+```{r}
+model_lm <- glm(Survived ~ Pclass + Sex + Age + SibSp + Parch, 
+             data = train_sub, family = "binomial")
+
+# Summarize the model
+summary(model_lm)
+```
+
+## **Create an estimate of whether an individual survived or not (binary variable) using the `predict` command on your estimated model**
+
+```{r}
+# Predict survival probabilities
+predicted_probs <- predict(model_lm, newdata = train, type = "response")
+```
+
+```{r}
+# Convert probabilities to binary outcome
+predicted_survival <- ifelse(predicted_probs > 0.5, yes = 1, no = 0)
+```
+
+```{r}
+# Add the predicted outcome to the original dataset
+train$predicted_survival <- predicted_survival
+```
+
+## **Create a confusion matrix, and interpret some of the statistics like accuracy for the entire `train` dataset. In other words, how many individuals who survived or died the titanic crash were correctly classified by your regression?**
+
+```{r}
+outcome.table <- table(train$Survived, train$predicted_survival)
+outcome.table
+```
+
+```{r}
+# (correct negatives + correct positives) / total number of outcomes
+correctly.predicted <- (outcome.table[1,1] + outcome.table[2,2]) / sum(outcome.table)
+correctly.predicted
+```
+
+Approximately 79.2% were correctly classified.
+
+### Improving accuracy
+
+```{r}
+model_lm2 <- glm(Survived ~ Pclass + Sex + Age, 
+             data = train_sub, family = "binomial")
+
+# Summarize the model
+summary(model_lm2)
+```
+
+```{r}
+# Predict survival probabilities
+predicted_probs <- predict(model_lm2, newdata = train, type = "response")
+```
+
+```{r}
+# Convert probabilities to binary outcome
+predicted_survival_2 <- ifelse(predicted_probs > 0.5, yes = 1, no = 0)
+```
+
+```{r}
+# Add the predicted outcome to the original dataset
+train$predicted_survival_2 <- predicted_survival_2
+```
+
+```{r}
+outcome.table2 <- table(train$Survived, train$predicted_survival_2)
+outcome.table2
+```
+
+```{r}
+# (correct negatives + correct positives) / total number of outcomes
+correctly.predicted2 <- (outcome.table2[1,1] + outcome.table2[2,2]) / sum(outcome.table2)
+correctly.predicted2
+```
+
+This lowers the accuracy slightly to 78.6%. The false positives increases in this case.
+
+## **5. Organise the 4 subparts above into a 1 page report.**
+
+**Introduction:**
+
+The sinking of the RMS Titanic in 1912 remains one of the most famous maritime disasters in history. This analysis examines factors affecting passenger survival using logistic regression, a statistical method for predicting binary outcomes. This report describes the processes of data exploration, model building, forecasting, and estimation, while explaining key terms for clarity.
+
+**1.Data Exploration and Cleaning**
+
+**Dataset Overview:**
+
+Titanic dataset containing 891 passenger records.
+
+Variables: passenger ID, class, name, gender, age and living status.
+
+**Clear data:**
+
+Numeric variables: To provide complete data for analysis, missing age values ​​were replaced by the median (representative value).
+
+Categorical variable: Missing values: Replace with "unknown" to maintain data integrity for the simulation.
+
+**2. Building the model**
+
+**Logistic Regression:**
+
+A statistical method for predicting a categorical outcome based on a set of independent variables (eg, survival/non-survival).
+
+The glm function in R: the "binomial" group is used to create a logistic regression model that reflects the binary nature of the outcome.
+
+**Model training and validation:**
+
+Sample Size: A random sample of 500 passengers was selected to form the sample.
+
+Validation approach: The trained model was used to predict survival outcomes for the entire data set, including the remaining 391 passengers not used in the study.
+
+Model 1: Includes all independent variables.
+
+Model 2: A reduced model using only P class (passenger seat), gender and age as predictors, focusing on potential performance gains.
+
+**3.Prediction and Evaluation**
+
+**Expected survival rate:**
+
+It is calculated using a prediction function that estimates the probability of survival for each passenger based on their characteristics.
+
+Binary result: Probabilities are derived using the ifelse function, which converts continuous probability values ​​into categorical "survival" or "non-survival" predictions using a threshold (eg, 50%).
+
+**Evaluation**
+
+Confusion matrix: Table summarizing the performance of the model by comparing the actual survival results with the predicted results. Overall accuracy: 80%. This indicates that the model accurately predicted the survival status of 80% of the passengers.
+
+**4.Limitations**
+
+Reliance on a single data set can lead to overfitting.
+
+Should perform feature extraction like L1 or L2 to improve accuracy
+
+Logistic regression models showed promising ability to predict survival outcomes in the Titanic data set. Further exploration and refinement can address limitations and expand the scope, increasing generalizability and accuracy across a wider range of applications.
+
+# **Question 7: Data Question**
+
+```{r}
+#Importing datasets
+customer_churn <- read.csv("/Users/aritraray/Desktop/telecom_customer_churn.csv")
+zipcode_population <- read.csv("/Users/aritraray/Desktop/telecom_zipcode_population.csv")
+```
+
+```{r}
+#Checking the structure
+str(customer_churn)
+str(zipcode_population)
+```
+
+```{r}
+library(dplyr)
+```
+
+```{r}
+#Checking names of the column in both datasets
+names(customer_churn)
+names(zipcode_population)
+```
+
+```{r}
+#Merging the dataset
+merged_data <- left_join(customer_churn, zipcode_population, by = c("Zip.code" = "Zip.Code"))
+```
+
+```{r}
+head(merged_data)
+```
+
+```{r}
+# Create a table with average population and average age by ZIPCODE
+summary_table <- merged_data %>%
+  group_by(Zip.code) %>%
+  summarise(Average_Population = mean(Population, na.rm = TRUE),
+            Average_Age = mean(Age, na.rm = TRUE))
+
+# Print the summary table
+print(summary_table)
+```
